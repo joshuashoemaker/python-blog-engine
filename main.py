@@ -194,10 +194,7 @@ class IndexRoute(BlogHandler):
 class BlogFront(BlogHandler):
     def get(self):
         posts = Post.all().order('-created')
-        array = []
-        for post in posts:
-            array.append(post)
-        self.render('front.html', posts = array)
+        self.render('front.html', posts = posts)
 
 class PostPage(BlogHandler):
     def get(self, post_id):
