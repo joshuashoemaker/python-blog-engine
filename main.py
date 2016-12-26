@@ -282,10 +282,10 @@ class OverwritePost(BlogHandler):
 
 class DeletePost(BlogHandler):
     def post(self):
-        author_id = self.request.get('author_id')
-        uid = self.read_secure_cookie('user_id')
+        author_id = int(self.request.get('author_id'))
+        uid = int(self.read_secure_cookie('user_id'))
+        post_id = self.request.get('post_id')
         if(author_id == uid):
-            post_id = self.request.get('post_id')
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
             post = db.get(key)
             post.delete()
@@ -356,7 +356,7 @@ class Register(Signup):
             u.put()
 
             self.login(u)
-            self.redirect('/blog')
+            self.redirect('/')
 
 class Login(BlogHandler):
     def get(self):
@@ -369,7 +369,7 @@ class Login(BlogHandler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/blog')
+            self.redirect('/')
         else:
             msg = 'Invalid login'
             self.render('login-form.html', error = msg)
@@ -446,6 +446,7 @@ app = webapp2.WSGIApplication([('/', IndexRoute),
                                ('/blog/vote', VoteHandler),
                                ('/blog/newpost', NewPost),
                                ('/blog/editpost', EditPost),
+                               ('/blog/delete', DeletePost),
                                ('/blog/savepost', OverwritePost),
                                ('/blog/comment', CommentHandler),
                                ('/signup', Register),

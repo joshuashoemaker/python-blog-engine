@@ -2,10 +2,23 @@
 
 <html>
   <head>
-    <title>Unit 2 Signup</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+  
+    <title>Python Blog Engine</title>
   </head>
 
-  <body>
-    <h2>Welcome, {{username}}!</h2>
+  <body class="container">
+
+    <header class="jumbotron">
+      <h1>Hello, {{username}}</h1>
+        <p>This is a demo blog engine built on top of Google App Engine. 
+          This was a project of mine for my Udacity Fullstack Developer 
+          Nanodegree. This blog features a multi user system and a voting 
+          and commeting system.</p>
+        <p><a class="btn btn-primary btn-lg" href="/blog" role="button">Enter Blog</a></p>
+    </header>
   </body>
 </html>
