@@ -2,11 +2,9 @@
 
 {% block content %}
 
-{% if p %}
   {% for p in posts %}
     {{ p.render() | safe }}
     <br><br>
   {% endfor %}
-{% endif %}
 
 {% endblock %}
