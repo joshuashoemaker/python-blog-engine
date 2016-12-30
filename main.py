@@ -44,7 +44,7 @@ def check_secure_val(secure_val):
         return val
 
 
-##Parent Handler
+############### Parent Handler ###############
 class BlogHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -129,10 +129,6 @@ class Post(db.Model):
     authorId = db.IntegerProperty(required = True)
     authorName = db.StringProperty(required = True)
 
-    #def get_votes(self):
-        #votes = Vote.all()#.filter('post_id =', self.key().id()).get()
-        #return votes
-
     def get_votes(self):
         votes = Vote.all()
         array = []
@@ -149,7 +145,7 @@ class Post(db.Model):
         return score
 
     def get_comments(self):
-        comments = Comment.all()
+        comments = Comment.all().order('created')
         array = []
         for comment in comments:
             if(comment.post_id == self.key().id()):
@@ -174,14 +170,17 @@ class Vote(db.Model):
 
 #comment parent
 def comment_key(name = 'default'):
-    return db.Key.from_path('votes', name)
+    return db.Key.from_path('comments', name)
 
 #Comment Model
 class Comment(db.Model):
+    ref_Id = db.IntegerProperty()
     post_id = db.IntegerProperty(required = True)
     commenter_id = db.IntegerProperty(required = True)
     commenter_name = db.StringProperty(required = True)
     comment = db.TextProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    last_modified = db.DateTimeProperty(auto_now = True)
 
 #########################Routes############################
 class IndexRoute(BlogHandler):
@@ -216,7 +215,7 @@ class NewPost(BlogHandler):
 
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -232,10 +231,11 @@ class NewPost(BlogHandler):
             self.render("newpost.html", subject=subject, content=content, error=error)
 
 
+#####Renders a page to edit the Post if it belongs to the logged in user#####
 class EditPost(BlogHandler):
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -254,10 +254,11 @@ class EditPost(BlogHandler):
             self.redirect('/blog/%s' % post_id)
 
 
+#####This Handler is called by the EditPost page to overwrite the index in the database#####
 class OverwritePost(BlogHandler):
     def post(self):
         if not self.user:
-            self.redirect('/blog')
+            self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -282,8 +283,12 @@ class OverwritePost(BlogHandler):
 
 class DeletePost(BlogHandler):
     def post(self):
+
+        if not self.user:
+            self.redirect('/login')
+
         author_id = int(self.request.get('author_id'))
-        uid = int(self.read_secure_cookie('user_id'))
+        uid = self.user.key().id()
         post_id = self.request.get('post_id')
         if(author_id == uid):
             key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -380,12 +385,11 @@ class Logout(BlogHandler):
         self.redirect('/blog')
 
 
-
 class VoteHandler(BlogHandler):
     def post(self):
         if self.user:
             author_id = self.request.get('author_id')
-            voter_id = self.read_secure_cookie('user_id')
+            voter_id = self.user.key().id()
             post_id = self.request.get('post_id')
             score = int(self.request.get('score'))
             has_voted = False
@@ -412,7 +416,7 @@ class VoteHandler(BlogHandler):
                     v.put()
                     self.redirect('/blog/%s' % post_id)
             else:
-                self.redirect('/blog/%s' % post_id)
+                self.redirect('/blog/%s')
         else:
             self.redirect('/login')
 
@@ -421,23 +425,60 @@ class CommentHandler(BlogHandler):
         post_id = int(self.request.get('post_id'))
         if self.user:
             author_id = int(self.request.get('author_id'))
-            commenter_id = int(self.read_secure_cookie('user_id'))
+            commenter_id = self.user.key().id()
             commenter_name = self.user.name
             comment = self.request.get('comment')
 
             c = Comment(parent = comment_key(), author_id = author_id, commenter_id = commenter_id, commenter_name = commenter_name, post_id = post_id, comment = comment)
 
-            if(author_id != commenter_id):
+            if(author_id and commenter_id):
+                c.put()
+                c.ref_Id = c.key().id()
                 c.put()
                 self.redirect('/blog/%s' % post_id)
             else:
                 self.redirect('/blog/%s' % post_id)
         else:
+            self.redirect('/login')
+
+
+class DeleteCommentHandler(BlogHandler):
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
+
+        comment_id = int(self.request.get('comment_id'))
+        commenter_id = int(self.request.get('commenter_id'))
+        post_id = self.request.get('post_id')
+        user_id = self.user.key().id()
+
+        if(commenter_id == user_id):
+            key = db.Key.from_path('Comment', comment_id, parent=comment_key())
+            comment = db.get(key)
+            comment.delete()
+            self.redirect('/blog')
+        else:
             self.redirect('/blog/%s' % post_id)
 
-        
+class EditCommentHandler(BlogHandler):
+    def post(self):
+        if not self.user:
+            self.redirect('/login')
 
+        new_comment = self.request.get('new_comment')
+        comment_id = int(self.request.get('comment_id'))
+        commenter_id = int(self.request.get('commenter_id'))
+        post_id = self.request.get('post_id')
+        user_id = self.user.key().id()
 
+        if(user_id == commenter_id):
+            key = db.Key.from_path('Comment', comment_id, parent=comment_key())
+            comment = db.get(key)
+            comment.comment = "Edited: \n" + new_comment
+            comment.put()
+            self.redirect("/blog/%s" % post_id)
+        else:
+            self.redirect('/blog/%s' % post_id)
 
 
 app = webapp2.WSGIApplication([('/', IndexRoute),
@@ -449,6 +490,8 @@ app = webapp2.WSGIApplication([('/', IndexRoute),
                                ('/blog/delete', DeletePost),
                                ('/blog/savepost', OverwritePost),
                                ('/blog/comment', CommentHandler),
+                               ('/blog/deletecomment', DeleteCommentHandler),
+                               ('/blog/editcomment', EditCommentHandler),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout)

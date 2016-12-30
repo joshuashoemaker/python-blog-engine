@@ -3,9 +3,9 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
-  <link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
-  <link type="text/css" rel="stylesheet" href="/static/main.css" />
+  <link rel="stylesheet" href="/static/main.css" />
 
   <script
   src="https://code.jquery.com/jquery-3.1.1.min.js"
@@ -13,12 +13,27 @@
   crossorigin="anonymous"></script>
 
   <title>Python Blog Engine</title>
+
+
+<script>
+  var userCookie = "";
+  var userIdHash = "";
+  var userIdValue = ""
+
+  if(userCookie = document.cookie){
+    if(userIdHash = userCookie.split("user_id=")[1]){
+      userIdValue = userIdHash.split("|")[0];
+    }
+  }
+</script>
+
 </head>
 
 <body class="container">
 
   <header class="page-header">
     <h1><a class="main-title" href="/blog">Python Blog Engine</a> <small>Udacity Project by Joshua Shoemaker</small></h1>
+    <div class="container create-new-post"><a class="new-post-link" href="/blog/newpost">Tell Your Story</a></div> 
   </header>
 
   <div class="login-area">

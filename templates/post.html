@@ -1,4 +1,4 @@
-<div class="row">
+<div class="container">
   <div data-post-id="{{id}}" class="post col-md-8">
     <div class="post-heading">
       <div class="post-title">
@@ -25,7 +25,7 @@
         <input type="hidden" name="author_id" value="{{p.authorId}}">
         <a id="delete-button-{{id}}" class="glyphicon glyphicon-remove"></a>
       </form>
-      | 
+       
       <form id="edit-form-{{id}}" method="POST" action="/blog/editpost">
         <input type="hidden" name="post_id" value="{{id}}">
         <input type="hidden" name="author_id" value="{{p.authorId}}">
@@ -33,14 +33,14 @@
         <input type="hidden" name="content" value="{{p._render_text}}">
         <a id="edit-button-{{id}}" class="glyphicon glyphicon-pencil"></a>
       </form>
-      |
+      
       <form id="like-form-{{id}}" method="POST" action="/blog/vote">
         <input type="hidden" name="score" value="1">
         <input type="hidden" name="post_id" value="{{id}}">
         <input type="hidden" name="author_id" value="{{p.authorId}}">
         <a id="like-button-{{id}}" class="glyphicon glyphicon-plus"></a>
       </form>
-      | 
+       
       <form id="dislike-form-{{id}}" method="POST" action="/blog/vote">
         <input type="hidden" name="score" value="-1">
         <input type="hidden" name="post_id" value="{{id}}">
@@ -49,30 +49,102 @@
       </form>
     </div>
 
-      <div class="comment-wrapper container">
+      <div class="comment-wrapper">
         {% for comment in comments %}
-        <div class="row">
-          <div class="comment col-md-6">
-            from <a href="/?user={{p.authorId}}" class="commenter-name">{{comment.commenter_name}}</a>
+        <div class="container" id="comment-{{comment.ref_Id}}">
+          <div class="comment">
+            from <a href="/?user={{p.authorId}}" class="commenter-name">{{comment.commenter_name}}</a> at <small class="comment-time">{{comment.created.strftime("%b %d, %Y")}}</small>
             <p class="comment-content">{{comment.comment}}</p>
+            <div>
+
+              <form id= "delete-comment-form-{{comment.ref_Id}}" method="POST" action="/blog/deletecomment">
+                <input name="comment_id" type="hidden" value="{{comment.ref_Id}}">
+                <input type="hidden" name="commenter_id" value="{{comment.commenter_id}}">
+                <input name="post_id" type="hidden" value="{{id}}">
+              </form>
+
+              <form id = "edit-comment-form-{{comment.ref_Id}}" method="POST" action="/blog/editcomment">
+                <input name="comment_id" type="hidden" value="{{comment.ref_Id}}">
+                <input name="commenter_id" type="hidden" value="{{comment.commenter_id}}">
+                <input name="post_id" type="hidden" value="{{id}}">
+              </form>
+
+                <a id="edit-comment-button-{{comment.ref_Id}}" class="glyphicon glyphicon-pencil"></a>  
+                <a id="delete-comment-button-{{comment.ref_Id}}" class="glyphicon glyphicon-remove"></a>
+
+                <!-- This div hold the edit comment form which will be displayed when called upon by a valid user -->
+                <div class="well edit-comment-div" id="edit-comment-div-{{comment.ref_Id}}">
+                  <form method="POST" action="/blog/editcomment">
+                    <textarea name="new_comment" required class="form-control" rows="3" placeholder="Edit your comment..."></textarea>
+                    <input type="hidden" name="commenter_id" value="{{comment.commenter_id}}">
+                    <input type="hidden" name="comment_id" value="{{comment.ref_Id}}">
+                    <input name="post_id" type="hidden" value="{{id}}">
+                    <input class="comment-button btn btn-primary " type="submit" value="edit">
+                    <button id="cancel-comment-button-{{comment.ref_Id}}" class="comment-button btn btn-primary ">Cancel</button>
+                  </form>
+                </div>
+
+              <script>
+
+              $(document).ready(function(){
+
+                    //Comment Form Control
+                    var $editCommentForm{{comment.ref_Id}} = $("#edit-comment-form-{{comment.ref_Id}}");
+                    var $deleteCommentForm{{comment.ref_Id}} = $("#delete-comment-form-{{comment.ref_Id}}");
+                    var $editCommentButton{{comment.ref_Id}} = $("#edit-comment-button-{{comment.ref_Id}}");
+                    var $deleteCommentButton{{comment.ref_Id}} = $("#delete-comment-button-{{comment.ref_Id}}");
+                    var $editCommentDiv{{comment.ref_Id}} = $("#edit-comment-div-{{comment.ref_Id}}");
+                    var $cancelCommentButton{{comment.ref_Id}} = $("#cancel-comment-button-{{comment.ref_Id}}");
+
+                    $editCommentDiv{{comment.ref_Id}}.hide();
+
+                    //When clicking the comment edit button toggle the edit form
+                    $editCommentButton{{comment.ref_Id}}.click(function(e){
+                      e.preventDefault();
+                      if(userIdValue === "{{comment.commenter_id}}"){
+                        $editCommentDiv{{comment.ref_Id}}.toggle();
+                      }
+                    });
+
+                    $cancelCommentButton{{comment.ref_Id}}.click(function(e){
+                      e.preventDefault();
+                      $editCommentDiv{{comment.ref_Id}}.toggle();
+                    });
+
+                    //hides edit and delete comment buttons from users that do not own the comments
+                    if(userIdValue != "{{comment.commenter_id}}"){
+                      $editCommentButton{{comment.ref_Id}}.hide();
+                      $deleteCommentButton{{comment.ref_Id}}.hide();
+                    }
+
+                    //submits the delete form when clicked
+                    $deleteCommentButton{{comment.ref_Id}}.click(function(e){
+                      e.preventDefault();
+                      $deleteCommentForm{{comment.ref_Id}}.submit();
+                    });
+              });
+              </script>
+
+            </div>
           </div>
         </div>
 
         {% endfor %}
       </div>
 
-      <div class="comment-input well"  class="input-group">
+      <div id="#comment-form-{{id}}" class="comment-input well">
         <form method="POST" action="/blog/comment">
           <textarea name="comment" required class="form-control" rows="3" placeholder="Write a comment..."></textarea>
           <input name="author_id" type="hidden" value="{{p.authorId}}">
           <input name="post_id" type="hidden" value="{{id}}">
-          <input class="btn btn-primary " type="submit" value="comment">
+          <input class="comment-button btn btn-primary " type="submit" value="comment">
         </form>
       </div>
 
   <script>
     $(document).ready(function(){
 
+      //Vote Form Control
       var $likeForm{{id}} = $("#like-form-{{id}}");
       var $likeButton{{id}} = $("#like-button-{{id}}");
       var $dislikeForm{{id}} = $("#dislike-form-{{id}}");
@@ -81,6 +153,7 @@
       var $editButton{{id}} = $("#edit-button-{{id}}");
       var $deleteForm{{id}} = $("#delete-form-{{id}}");
       var $deleteButton{{id}} = $("#delete-button-{{id}}");
+      var $commentForm{{id}} = $("#comment-form-{{id}}");
 
       $likeButton{{id}}.click(function(e){
         e.preventDefault();
@@ -101,7 +174,34 @@
         e.preventDefault();
         $deleteForm{{id}}.submit();
       });
+
+      if(userIdValue != "{{p.authorId}}"){
+        $editButton{{id}}.hide();
+        $deleteButton{{id}}.hide();
+      }
+
+      if(userIdValue === "{{p.authorId}}"){
+        $("#dislike-button-{{id}}").hide();
+        $("#like-button-{{id}}").hide();
+      }
+
+      if(userIdValue === ""){
+        $("#dislike-button-{{id}}").hide();
+        $("#like-button-{{id}}").hide();
+        $commentForm{{id}}.hide();
+      }
+
     });
+
+    
   </script>
 
+
+  <script>
+  
+
+
+  </script>
+
+</div>
 </div>

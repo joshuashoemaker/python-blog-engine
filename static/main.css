@@ -54,6 +54,7 @@ label {
     border-left-width: 1px;
     border-left-style: solid;
     padding-top: 5px;
+    padding-bottom: 5px;
 }
 
 .post-heading {
@@ -98,5 +99,42 @@ label {
     border-top-style: solid;
     margin: 7px auto;
     padding: 0px 15px;
+}
 
+
+
+.comment-button{
+    margin-top: 5px;
+}
+
+.content-input{
+    min-width: 100%;
+}
+
+.create-new-post{
+    color: rgb(245, 245, 245);
+    text-align: center;
+    box-shadow: 5px 7px 10px rgba(55, 55, 55, 0.1);
+    border-top-color: rgb(240, 240, 240);
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-left-width: 1px;
+    border-left-style: solid;
+    padding: 7px 15px;
+}
+
+.new-post-link{
+    font-size: 20px;
+    text-decoration: none;
+    color: steelblue;
+}
+
+.new-post-link:visited{
+    text-decoration: none;
+    color: steelblue;
+}
+
+.new-post-link:hover{
+    text-decoration: none;
+    color: steelblue;
 }

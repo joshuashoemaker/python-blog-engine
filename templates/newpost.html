@@ -1,21 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h2>new post</h2>
-
-    <form method="post"  class="input-group">
+  <h2>Write a Blog</h2>
+<div class="container" >
+  <div class="blog-input well">
+    <form id="edit-form" method="post"  class="input-group">
       <label>
-        <div>subject</div>
-        <input type="text" name="subject" value="{{subject}}" required>
+        <div>Title</div>
+        <input type="text" class="form-control" name="subject" value="{{subject}}" required>
       </label>
 
       <label>
-        <div>blog</div>
-        <textarea name="content" required>{{content}}</textarea>
+        <div>Body</div>
+         <textarea name="content" rows="7" placeholder="Write your thoughts..." class="form-control content-input" required>{{content}}</textarea>
       </label>
 
       <div class="error">{{error}}</div>
+      <a id="cancel-button" class="glyphicon glyphicon-remove"></a> | 
+      <a id="submit-button" class="glyphicon glyphicon-ok"></a>
 
-      <input type="submit">
     </form>
+  </div>
+</div>
+
+    <script>
+
+    $(document).ready(function(){
+
+      var $editForm = $("#edit-form");
+      var $submitButton = $("#submit-button");
+      var $cancelButton = $("#cancel-button");
+
+      $submitButton.click(function(e){
+        e.preventDefault();
+        $editForm.submit();
+      });
+
+      $cancelButton.click(function(e){
+        e.preventDefault();
+          window.location.href = "/blog/{{post_id}}";
+      });
+
+    });
+
+    </script>
 {% endblock %}
