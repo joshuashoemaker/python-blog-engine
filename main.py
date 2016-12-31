@@ -1,4 +1,4 @@
-#dependencies
+# Dependencies
 import os
 import re
 import random
@@ -9,34 +9,40 @@ import webapp2
 import jinja2
 from google.appengine.ext import db
 
-#Environment
+# Environment
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
-                               autoescape = True)
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+                               autoescape=True)
 
 
-###############Security and Authentication########################
+# Security and Authentication
 secret = 'GrownMenCanEnjoyLittlePonies'
 
-def make_salt(length = 5):
+
+def make_salt(length=5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
-def make_pw_hash(name, pw, salt = None):
+
+def make_pw_hash(name, pw, salt=None):
     if not salt:
         salt = make_salt()
     h = hashlib.sha256(name + pw + salt).hexdigest()
     return '%s,%s' % (salt, h)
 
+
 def valid_pw(name, password, h):
     salt = h.split(',')[0]
     return h == make_pw_hash(name, password, salt)
+
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
 
+
 def make_secure_val(val):
     return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
+
 
 def check_secure_val(secure_val):
     val = secure_val.split('|')[0]
@@ -44,7 +50,7 @@ def check_secure_val(secure_val):
         return val
 
 
-############### Parent Handler ###############
+# Parent Handler
 class BlogHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -76,26 +82,29 @@ class BlogHandler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
+
 def render_post(response, post):
     response.out.write('<b>' + post.subject + '</b><br>')
     response.out.write(post.content)
 
 
+# Models
 
-######################Models######################
-#user parent
-def users_key(group = 'default'):
+
+# user parent
+def users_key(group='default'):
     return db.Key.from_path('users', group)
 
-#user model
+
+# user model
 class User(db.Model):
-    name = db.StringProperty(required = True)
-    pw_hash = db.StringProperty(required = True)
+    name = db.StringProperty(required=True)
+    pw_hash = db.StringProperty(required=True)
     email = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
-        return User.get_by_id(uid, parent = users_key())
+        return User.get_by_id(uid, parent=users_key())
 
     @classmethod
     def by_name(cls, name):
@@ -103,12 +112,12 @@ class User(db.Model):
         return u
 
     @classmethod
-    def register(cls, name, pw, email = None):
+    def register(cls, name, pw, email=None):
         pw_hash = make_pw_hash(name, pw)
-        return User(parent = users_key(),
-                    name = name,
-                    pw_hash = pw_hash,
-                    email = email)
+        return User(parent=users_key(),
+                    name=name,
+                    pw_hash=pw_hash,
+                    email=email)
 
     @classmethod
     def login(cls, name, pw):
@@ -116,18 +125,20 @@ class User(db.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
-#blog parent
-def blog_key(name = 'default'):
+
+# blog parent
+def blog_key(name='default'):
     return db.Key.from_path('blogs', name)
 
-#blog model
+
+# blog model
 class Post(db.Model):
-    subject = db.StringProperty(required = True)
-    content = db.TextProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
-    last_modified = db.DateTimeProperty(auto_now = True)
-    authorId = db.IntegerProperty(required = True)
-    authorName = db.StringProperty(required = True)
+    subject = db.StringProperty(required=True)
+    content = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    last_modified = db.DateTimeProperty(auto_now=True)
+    authorId = db.IntegerProperty(required=True)
+    authorName = db.StringProperty(required=True)
 
     def get_votes(self):
         votes = Vote.all()
@@ -151,49 +162,57 @@ class Post(db.Model):
             if(comment.post_id == self.key().id()):
                 array.append(comment)
         return array
-    
+
     def render(self):
         id = str(self.key().id())
         votes = self.get_votes()
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self, id = id, count = self.vote_score(), comments = self.get_comments())
+        return render_str("post.html", p=self, id=id, count=self.vote_score(),
+                          comments=self.get_comments())
 
-#vote parent
-def vote_key(name = 'default'):
+
+# vote parent
+def vote_key(name='default'):
     return db.Key.from_path('votes', name)
 
-#vote model
-class Vote(db.Model):
-    value = db.IntegerProperty(required = True)
-    post_id = db.IntegerProperty(required = True)
-    voter_id = db.IntegerProperty(required = True)
 
-#comment parent
-def comment_key(name = 'default'):
+# vote model
+class Vote(db.Model):
+    value = db.IntegerProperty(required=True)
+    post_id = db.IntegerProperty(required=True)
+    voter_id = db.IntegerProperty(required=True)
+
+
+# comment parent
+def comment_key(name='default'):
     return db.Key.from_path('comments', name)
 
-#Comment Model
+
+# Comment Model
 class Comment(db.Model):
     ref_Id = db.IntegerProperty()
-    post_id = db.IntegerProperty(required = True)
-    commenter_id = db.IntegerProperty(required = True)
-    commenter_name = db.StringProperty(required = True)
-    comment = db.TextProperty(required = True)
-    created = db.DateTimeProperty(auto_now_add = True)
-    last_modified = db.DateTimeProperty(auto_now = True)
+    post_id = db.IntegerProperty(required=True)
+    commenter_id = db.IntegerProperty(required=True)
+    commenter_name = db.StringProperty(required=True)
+    comment = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    last_modified = db.DateTimeProperty(auto_now=True)
 
-#########################Routes############################
+
+# Routes
 class IndexRoute(BlogHandler):
     def get(self):
         if self.user:
-            self.render('welcome.html', username = self.user.name)
+            self.render('welcome.html', username=self.user.name)
         else:
-            self.redirect('/signup')
+            return self.redirect('/signup')
+
 
 class BlogFront(BlogHandler):
     def get(self):
         posts = Post.all().order('-created')
-        self.render('front.html', posts = posts)
+        self.render('front.html', posts=posts)
+
 
 class PostPage(BlogHandler):
     def get(self, post_id):
@@ -204,7 +223,8 @@ class PostPage(BlogHandler):
             self.error(404)
             return
 
-        self.render("permalink.html", post = post)
+        self.render("permalink.html", post=post)
+
 
 class NewPost(BlogHandler):
     def get(self):
@@ -215,7 +235,7 @@ class NewPost(BlogHandler):
 
     def post(self):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -223,19 +243,22 @@ class NewPost(BlogHandler):
         authorName = self.user.name
 
         if subject and content:
-            p = Post(parent = blog_key(), subject = subject, content = content, authorId = authorId, authorName = authorName, likes = 0, dislikes = 0)
+            p = Post(parent=blog_key(), subject=subject, content=content,
+                     authorId=authorId, authorName=authorName, likes=0,
+                     dislikes=0)
             p.put()
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
             error = "Need a subject as well as content"
-            self.render("newpost.html", subject=subject, content=content, error=error)
+            self.render("newpost.html", subject=subject,
+                        content=content, error=error)
 
 
-#####Renders a page to edit the Post if it belongs to the logged in user#####
+# Renders a page to edit the Post if it belongs to the logged in user
 class EditPost(BlogHandler):
     def post(self):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -246,19 +269,21 @@ class EditPost(BlogHandler):
         if(user_id == int(author_id)):
             error = ""
             if subject and content:
-                self.render("editpost.html", subject=subject, content=content, error=error, post_id=post_id, author_id=author_id)
+                self.render("editpost.html", subject=subject, content=content,
+                            error=error, post_id=post_id, author_id=author_id)
             else:
                 error = "Need a subject as well as content"
-                self.render("editpost.html", subject=subject, content=content, error=error, post_id=post_id, author_id=author_id)
+                self.render("editpost.html", subject=subject, content=content,
+                            error=error, post_id=post_id, author_id=author_id)
         else:
             self.redirect('/blog/%s' % post_id)
 
 
-#####This Handler is called by the EditPost page to overwrite the index in the database#####
+# This is called by the EditPost page to overwrite the index in the database
 class OverwritePost(BlogHandler):
     def post(self):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -283,9 +308,8 @@ class OverwritePost(BlogHandler):
 
 class DeletePost(BlogHandler):
     def post(self):
-
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         author_id = int(self.request.get('author_id'))
         uid = self.user.key().id()
@@ -300,20 +324,27 @@ class DeletePost(BlogHandler):
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+
+
 def valid_username(username):
     return username and USER_RE.match(username)
 
 PASS_RE = re.compile(r"^.{3,20}$")
+
+
 def valid_password(password):
     return password and PASS_RE.match(password)
 
-EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
+EMAIL_RE = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
+
+
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
 
+
 class Signup(BlogHandler):
     def get(self):
-        self.render("signup-form.html")
+        return self.render("signup-form.html")
 
     def post(self):
         have_error = False
@@ -322,8 +353,8 @@ class Signup(BlogHandler):
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
 
-        params = dict(username = self.username,
-                      email = self.email)
+        params = dict(username=self.username,
+                      email=self.email)
 
         if not valid_username(self.username):
             params['error_username'] = "That's not a valid username."
@@ -351,17 +382,18 @@ class Signup(BlogHandler):
 
 class Register(Signup):
     def done(self):
-        #check if user exists
+        # check if user exists
         u = User.by_name(self.username)
         if u:
             msg = 'That user already exists.'
-            self.render('signup-form.html', error_username = msg)
+            self.render('signup-form.html', error_username=msg)
         else:
             u = User.register(self.username, self.password, self.email)
             u.put()
 
             self.login(u)
             self.redirect('/')
+
 
 class Login(BlogHandler):
     def get(self):
@@ -377,7 +409,8 @@ class Login(BlogHandler):
             self.redirect('/')
         else:
             msg = 'Invalid login'
-            self.render('login-form.html', error = msg)
+            self.render('login-form.html', error=msg)
+
 
 class Logout(BlogHandler):
     def get(self):
@@ -394,7 +427,8 @@ class VoteHandler(BlogHandler):
             score = int(self.request.get('score'))
             has_voted = False
 
-            v = Vote(parent = vote_key(), value = score, post_id = int(post_id), voter_id = int(voter_id))
+            v = Vote(parent=vote_key(), value=score,
+                     post_id=int(post_id), voter_id=int(voter_id))
 
             if(author_id != voter_id):
                 key = db.Key.from_path('Post', int(post_id), parent=blog_key())
@@ -407,7 +441,7 @@ class VoteHandler(BlogHandler):
                         if(vote.voter_id == self.user.key().id()):
                             has_voted = True
 
-                    if(has_voted == True):
+                    if has_voted:
                         self.redirect('/blog/%s' % post_id)
                     else:
                         v.put()
@@ -418,7 +452,8 @@ class VoteHandler(BlogHandler):
             else:
                 self.redirect('/blog/%s')
         else:
-            self.redirect('/login')
+            return self.redirect('/login')
+
 
 class CommentHandler(BlogHandler):
     def post(self):
@@ -429,7 +464,10 @@ class CommentHandler(BlogHandler):
             commenter_name = self.user.name
             comment = self.request.get('comment')
 
-            c = Comment(parent = comment_key(), author_id = author_id, commenter_id = commenter_id, commenter_name = commenter_name, post_id = post_id, comment = comment)
+            c = Comment(parent=comment_key(), author_id=author_id,
+                        commenter_id=commenter_id,
+                        commenter_name=commenter_name,
+                        post_id=post_id, comment=comment)
 
             if(author_id and commenter_id):
                 c.put()
@@ -439,13 +477,13 @@ class CommentHandler(BlogHandler):
             else:
                 self.redirect('/blog/%s' % post_id)
         else:
-            self.redirect('/login')
+            return self.redirect('/login')
 
 
 class DeleteCommentHandler(BlogHandler):
     def post(self):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         comment_id = int(self.request.get('comment_id'))
         commenter_id = int(self.request.get('commenter_id'))
@@ -460,10 +498,11 @@ class DeleteCommentHandler(BlogHandler):
         else:
             self.redirect('/blog/%s' % post_id)
 
+
 class EditCommentHandler(BlogHandler):
     def post(self):
         if not self.user:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         new_comment = self.request.get('new_comment')
         comment_id = int(self.request.get('comment_id'))
