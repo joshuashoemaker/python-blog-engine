@@ -51,7 +51,7 @@
 
       <div class="comment-wrapper">
         {% for comment in comments %}
-        <div class="container" id="comment-{{comment.ref_Id}}">
+        <div id="comment-{{comment.ref_Id}}">
           <div class="comment">
             from <a href="/?user={{p.authorId}}" class="commenter-name">{{comment.commenter_name}}</a> at <small class="comment-time">{{comment.created.strftime("%b %d, %Y")}}</small>
             <p class="comment-content">{{comment.comment}}</p>
